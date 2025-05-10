@@ -74,7 +74,7 @@ st.markdown("""
 
 def install_packages_if_needed():
     """Install required packages if not already installed"""
-    required_packages = ['gdown']xs
+    required_packages = ['gdown']
     for package in required_packages:
         try:
             __import__(package)
