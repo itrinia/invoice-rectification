@@ -74,7 +74,7 @@ st.markdown("""
 
 def install_packages_if_needed():
     """Install required packages if not already installed"""
-    required_packages = ['gdown']
+    required_packages = ['gdown']xs
     for package in required_packages:
         try:
             __import__(package)
@@ -83,7 +83,6 @@ def install_packages_if_needed():
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 def download_model():
-    """Download the model from Google Drive using gdown"""
     try:
         import gdown
         
@@ -109,9 +108,6 @@ def download_model():
         return False
 
 def detect_document_boundaries(image):
-    """
-    Detect document boundaries in the image with robust edge detection
-    """
     # Convert to grayscale if needed
     if len(image.shape) == 3:
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -622,7 +618,7 @@ def main():
         if 'results' in st.session_state:
             results = st.session_state['results']
             
-            # Display side-by-side comparison
+            # Display comparison
             st.pyplot(create_before_after_comparison(results))
             
             # Display processing time
