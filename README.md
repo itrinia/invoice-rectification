@@ -5,8 +5,6 @@ A Streamlit web application for document invoice rectification using the DocUNet
 ## Features
 
 - Upload and process distorted document images
-- Automatic document boundary detection
-- Advanced rectification with adjustable parameters
 - Real-time visualization of the rectification process
 - Quality metrics (SSIM and PSNR) for result evaluation
 - Download rectified documents
