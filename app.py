@@ -524,6 +524,10 @@ def main():
     with col1:
         st.markdown('<h2 class="sub-header">Upload Document</h2>', unsafe_allow_html=True)
         
+        # Set default values for document processing
+        crop_document = True
+        intensity = 0.5
+        
         # File uploader with CSS styling
         st.markdown('<div class="file-upload-container">', unsafe_allow_html=True)
         uploaded_file = st.file_uploader("Choose a document image...", type=["jpg", "jpeg", "png"])
