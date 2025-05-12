@@ -519,39 +519,39 @@ def main():
     model_download_success = download_model()
     
     # Create sidebar for information and settings
-    with st.sidebar:
-        st.markdown("### About this Project")
-        st.markdown("""
-        This application implements the DocUNet algorithm for rectifying distorted invoice documents.
+    # with st.sidebar:
+    #     st.markdown("### About this Project")
+    #     st.markdown("""
+    #     This application implements the DocUNet algorithm for rectifying distorted invoice documents.
         
-        **Features:**
-        - Upload distorted documents
-        - Automatic document detection
-        - Analysis with SSIM and PSNR metrics
+    #     **Features:**
+    #     - Upload distorted documents
+    #     - Automatic document detection
+    #     - Analysis with SSIM and PSNR metrics
         
-        **Developer:** Ileene Trinia Santoso  
-        Universitas Ciputra Surabaya
-        """)
+    #     **Developer:** Ileene Trinia Santoso  
+    #     Universitas Ciputra Surabaya
+    #     """)
         
-        # Rectification controls
-        st.markdown("### Rectification Controls")
+    #     # Rectification controls
+    #     st.markdown("### Rectification Controls")
         
-        # Document detection toggle
-        crop_document = st.checkbox(
-            "Enable Document Detection", 
-            value=True,
-            help="Automatically detect and crop document boundaries before rectification"
-        )
+    #     # Document detection toggle
+    #     crop_document = st.checkbox(
+    #         "Enable Document Detection", 
+    #         value=True,
+    #         help="Automatically detect and crop document boundaries before rectification"
+    #     )
         
-        # Intensity slider for fallback mode
-        intensity = st.slider(
-            "Rectification Intensity",
-            min_value=0.1,
-            max_value=1.0,
-            value=0.5,
-            step=0.1,
-            help="Controls rectification strength (used in fallback mode)"
-        )
+    #     # Intensity slider for fallback mode
+    #     intensity = st.slider(
+    #         "Rectification Intensity",
+    #         min_value=0.1,
+    #         max_value=1.0,
+    #         value=0.5,
+    #         step=0.1,
+    #         help="Controls rectification strength (used in fallback mode)"
+    #     )
     
     # Main content area - split into two columns
     col1, col2 = st.columns(2)
