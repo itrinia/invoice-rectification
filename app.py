@@ -433,7 +433,14 @@ def rectify_document_fallback(image, intensity=0.5):
     flow_vis_color = cv2.applyColorMap(np.uint8(flow_mag_norm * 255), cv2.COLORMAP_JET)
     flow_vis_color = cv2.cvtColor(flow_vis_color, cv2.COLOR_BGR2RGB)
     alpha = 0.6
-    overlaid = cv2.addWeighted(image, 1 - alpha, flow_vis_color, alpha, 0)
+    # Ensure image and flow_vis_color have the same shape and channels
+    if len(image.shape) == 2:
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    else:
+        image_rgb = image
+    if image_rgb.shape != flow_vis_color.shape:
+        flow_vis_color = cv2.resize(flow_vis_color, (image_rgb.shape[1], image_rgb.shape[0]))
+    overlaid = cv2.addWeighted(image_rgb, 1 - alpha, flow_vis_color, alpha, 0)
     
     # Calculate metrics
     metrics = calculate_metrics(image, rectified)
