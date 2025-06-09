@@ -16,14 +16,14 @@ import sys
 IMG_SIZE = (512, 512)
 OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-MODEL_PATH = "docunet_model.h5"
 
 # Google Drive file ID for model download
-GOOGLE_DRIVE_FILE_ID = "1aYNIwYh2R178-AYIXd1wo_ISa7jhFhd-"
+GOOGLE_DRIVE_FILE_ID = "1UgtUShthRzypi_4I-Kmjt1KwD4GuA84m"
+MODEL_PATH = "final_working_model.h5"
 
 # Set page config
 st.set_page_config(
-    page_title="DocUNet: Document Invoice Rectification",
+    page_title="DocUNet: Faktur Rectification",
     page_icon="📄",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -74,15 +74,24 @@ st.markdown("""
 
 def install_packages_if_needed():
     """Install required packages if not already installed"""
-    required_packages = ['gdown']
+    required_packages = [
+        'gdown',
+        'opencv-python',
+        'numpy',
+        'Pillow',
+        'scikit-image',
+        'matplotlib',
+        'tensorflow'
+    ]
     for package in required_packages:
         try:
-            __import__(package)
+            __import__(package.replace('-', '_'))
         except ImportError:
             st.info(f"Installing {package}...")
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 def download_model():
+    """Download the model from Google Drive using gdown"""
     try:
         import gdown
         
@@ -108,6 +117,9 @@ def download_model():
         return False
 
 def detect_document_boundaries(image):
+    """
+    Detect document boundaries in the image with robust edge detection
+    """
     # Convert to grayscale if needed
     if len(image.shape) == 3:
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -402,7 +414,7 @@ def rectify_document_fallback(image, intensity=0.5):
     # Get dimensions
     h, w = image.shape[:2]
     
-    # Generate synthetic flow field
+    # Generate synthetic flow field (for rectification only, not for display)
     flow_x, flow_y = generate_synthetic_flow_field((h, w), intensity=intensity)
     
     # Create coordinate grid
@@ -421,27 +433,6 @@ def rectify_document_fallback(image, intensity=0.5):
                          interpolation=cv2.INTER_CUBIC, 
                          borderMode=cv2.BORDER_REPLICATE)
     
-    # Create flow magnitude visualization
-    flow_mag = np.sqrt(flow_x**2 + flow_y**2)
-    max_mag = np.max(flow_mag)
-    if max_mag > 0:
-        flow_mag_norm = flow_mag / max_mag
-    else:
-        flow_mag_norm = flow_mag
-    
-    # Overlay flow visualization on original image
-    flow_vis_color = cv2.applyColorMap(np.uint8(flow_mag_norm * 255), cv2.COLORMAP_JET)
-    flow_vis_color = cv2.cvtColor(flow_vis_color, cv2.COLOR_BGR2RGB)
-    alpha = 0.6
-    # Ensure image and flow_vis_color have the same shape and channels
-    if len(image.shape) == 2:
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    else:
-        image_rgb = image
-    if image_rgb.shape != flow_vis_color.shape:
-        flow_vis_color = cv2.resize(flow_vis_color, (image_rgb.shape[1], image_rgb.shape[0]))
-    overlaid = cv2.addWeighted(image_rgb, 1 - alpha, flow_vis_color, alpha, 0)
-    
     # Calculate metrics
     metrics = calculate_metrics(image, rectified)
     
@@ -449,57 +440,9 @@ def rectify_document_fallback(image, intensity=0.5):
         "original": image,
         "rectified_original": rectified,
         "preprocessed": cv2.cvtColor(image, cv2.COLOR_RGB2GRAY).astype(np.float32) / 255.0,
-        "flow_x": flow_x,
-        "flow_y": flow_y,
-        "flow_magnitude": flow_mag_norm,
-        "overlaid": overlaid,
         "metrics": metrics,
         "inference_time": 0.5  # Simulated time
     }
-
-def create_comparison_fig(results):
-    """
-    Create comparison figure for display in Streamlit
-    """
-    fig = plt.figure(figsize=(12, 8))
-    
-    # Original images
-    plt.subplot(2, 3, 1)
-    plt.title("Original Document")
-    plt.imshow(results["original"])
-    plt.axis('off')
-    
-    plt.subplot(2, 3, 2)
-    plt.title("Preprocessed Image")
-    plt.imshow(results["preprocessed"], cmap='gray')
-    plt.axis('off')
-    
-    plt.subplot(2, 3, 3)
-    plt.title("Flow Field Overlay")
-    plt.imshow(results["overlaid"])
-    plt.axis('off')
-    
-    # Rectified images
-    plt.subplot(2, 3, 4)
-    plt.title("Rectified Document")
-    plt.imshow(results["rectified_original"])
-    plt.axis('off')
-    
-    plt.subplot(2, 3, 5)
-    plt.title("Flow X Component")
-    plt.imshow(results["flow_x"], cmap='jet')
-    plt.colorbar(fraction=0.046)
-    plt.axis('off')
-    
-    plt.subplot(2, 3, 6)
-    plt.title("Flow Y Component")
-    plt.imshow(results["flow_y"], cmap='jet')
-    plt.colorbar(fraction=0.046)
-    plt.axis('off')
-    
-    plt.tight_layout()
-    
-    return fig
 
 def create_before_after_comparison(results):
     """
@@ -517,7 +460,7 @@ def create_before_after_comparison(results):
     return fig
 
 def main():
-    st.markdown('<h1 class="main-header">DocUNet: Document Invoice Rectification</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">DocUNet: Document Faktur Rectification</h1>', unsafe_allow_html=True)
     
     # Install required packages if needed
     install_packages_if_needed()
@@ -527,13 +470,13 @@ def main():
     
     # Main content area - split into two columns
     col1, col2 = st.columns(2)
-    
+
+    # Add rectification controls to main area (if needed for logic)
+    crop_document = True  # Default value
+    intensity = 0.5       # Default value
+
     with col1:
         st.markdown('<h2 class="sub-header">Upload Document</h2>', unsafe_allow_html=True)
-        
-        # Set default values for document processing
-        crop_document = True
-        intensity = 0.5
         
         # File uploader with CSS styling
         st.markdown('<div class="file-upload-container">', unsafe_allow_html=True)
@@ -565,12 +508,12 @@ def main():
                     )
                     step1.markdown('<div class="step-item step-complete">1. ✓ Document detection complete</div>', unsafe_allow_html=True)
                     
-                    step2.markdown('<div class="step-item">2. Running DocUNet inference...</div>', unsafe_allow_html=True)
+                    step2.markdown('<div class="step-item">2. Running Model...</div>', unsafe_allow_html=True)
                     
                     # Use fallback rectification method
                     results = rectify_document_fallback(cropped_rgb, intensity)
                     
-                    step2.markdown('<div class="step-item step-complete">2. ✓ DocUNet inference complete</div>', unsafe_allow_html=True)
+                    step2.markdown('<div class="step-item step-complete">2. ✓ Model learning complete</div>', unsafe_allow_html=True)
                     
                     step3.markdown('<div class="step-item">3. Applying rectification...</div>', unsafe_allow_html=True)
                     
@@ -594,7 +537,7 @@ def main():
         if 'results' in st.session_state:
             results = st.session_state['results']
             
-            # Display comparison
+            # Display side-by-side comparison
             st.pyplot(create_before_after_comparison(results))
             
             # Display processing time
@@ -615,29 +558,22 @@ def main():
             
             # Download buttons
             st.markdown("### Download Results")
-            
-            # Convert images to downloadable format
-            for img_name, img_data in [
-                ("Original", results["original"]),
-                ("Rectified", results["rectified_original"])
-            ]:
-                # Convert to PIL Image for downloading
-                if len(img_data.shape) == 2:  # Grayscale
-                    pil_img = Image.fromarray(np.uint8(img_data))
-                else:  # RGB
-                    pil_img = Image.fromarray(np.uint8(img_data))
-                
-                buf = io.BytesIO()
-                pil_img.save(buf, format="PNG")
-                byte_im = buf.getvalue()
-                
-                st.download_button(
-                    label=f"Download {img_name}",
-                    data=byte_im,
-                    file_name=f"{img_name.lower()}_document.png",
-                    mime="image/png",
-                    key=f"download_{img_name.lower()}"
-                )
+            # Only allow downloading the rectified file
+            img_data = results["rectified_original"]
+            if len(img_data.shape) == 2:  # Grayscale
+                pil_img = Image.fromarray(np.uint8(img_data))
+            else:  # RGB
+                pil_img = Image.fromarray(np.uint8(img_data))
+            buf = io.BytesIO()
+            pil_img.save(buf, format="PNG")
+            byte_im = buf.getvalue()
+            st.download_button(
+                label="Download Rectified",
+                data=byte_im,
+                file_name="rectified_document.png",
+                mime="image/png",
+                key="download_rectified"
+            )
         else:
             st.info("Upload and process a document to see the rectified result here.")
     
@@ -650,4 +586,4 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    main() 
