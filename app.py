@@ -411,6 +411,8 @@ def rectify_document_fallback(image, intensity=0.5):
     """
     Fallback method for document rectification if model prediction fails
     """
+    import time
+    start_time = time.time()
     # Get dimensions
     h, w = image.shape[:2]
     
@@ -436,12 +438,14 @@ def rectify_document_fallback(image, intensity=0.5):
     # Calculate metrics
     metrics = calculate_metrics(image, rectified)
     
+    inference_time = time.time() - start_time
+    
     return {
         "original": image,
         "rectified_original": rectified,
         "preprocessed": cv2.cvtColor(image, cv2.COLOR_RGB2GRAY).astype(np.float32) / 255.0,
         "metrics": metrics,
-        "inference_time": 0.5  # Simulated time
+        "inference_time": inference_time
     }
 
 def create_before_after_comparison(results):
